@@ -1,11 +1,29 @@
 import ui.UI as ui_class
-from repository.Repository import MemoryRepository
+from repository.Repository import RepositoryController
 from domain.Student import Student
+from services.Services import Services
+from random import choice, randint
 
 
 ui = ui_class.UI()
+storage = RepositoryController(Student, "mem")
+try:
+    storage.import_repository()
+except FileNotFoundError as e:
+    print("Nothing to import")
+service_engine = Services(storage, Student)
 
-storage = MemoryRepository()
+
+names = [
+    "James", "Emma", "Michael", "Olivia", "William", "Sophia", "Alexander", "Isabella",
+    "Benjamin", "Ava", "Jacob", "Mia", "Ethan", "Amelia", "Lucas", "Harper", "Mason",
+    "Evelyn", "Henry", "Abigail", "Elijah", "Emily", "Daniel", "Ella", "Matthew",
+    "Grace", "Samuel", "Lily", "Logan", "Scarlett"
+]
+
+for i in range(10):
+    new_stud = {"name": choice(names), "group": randint(1, 3)}
+    service_engine.add_student(new_stud)
 
 while True:
     try:
@@ -18,41 +36,29 @@ while True:
     print()
 
     if option == 0:
+        storage.write_repository()
         break
 
     if option == 1:
-        new_student = Student(args["name"], args["group"])
-        storage.add_student(new_student)
+        service_engine.add_student(args)
 
 
     if option == 2:
-        print(storage.get_storage())
+        ui.pretty_print(storage.get_storage())
 
 
 
     if option == 3:
-        _id = args["id"]
-
-
-        index = -1
-        the_list = storage.get_storage()
-
-        for i in range(len(the_list)) :
-            if the_list[i].get_id() == _id: # the_list[i] is a Student
-                index = i
-        if index == -1:
-            print("Student is not added")
-            continue
-        storage.remove_student(_id)
+        service_engine.remove_student(args)
 
     if option == 4:
-        group_id = args["group"]
+        service_engine.filter(args)
 
-        indices = []
+    if option == 5:
+        service_engine.undo()
 
-        the_list = storage.get_storage()
-        for i in range(len(the_list)) :
-            if the_list[i].group == group_id:
-                indices.append(i)
-
-        storage.remove_students_by_indices(indices)
+    if option == 6:
+        try:
+            storage.change_repository(args["new_repo"])
+        except KeyError as Ke:
+            print("Not a valid repository mode")
